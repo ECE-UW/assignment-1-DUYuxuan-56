@@ -159,11 +159,33 @@ def main():
         if line == '':
             break
         #strName=weber str
-        if line[0]=='a':
-            #input is integer
-            if (re.match( r'^a "([^"]+)" ( *\( *[-+]?\d+ *, *[-+]?\d+ *\)){2,} *$', line)):
-                strName=re.search('\"([^"]+)', line).group(1)
-                strName=strName.lower()
+        if (re.match( r'^ *a "([^"]+)" ( *\( *[-+]?\d+ *, *[-+]?\d+ *\)){2,} *$', line)):
+            strName=re.search('\"([^"]+)', line).group(1)
+            strName=strName.lower()
+            segment[:] = []
+            strPtSet=re.findall('\(([^)]+)', line)
+            #['2,-1', '2,2', '5,5', '5,6', '3,8']
+            for i in range(len(strPtSet)-1):
+                pt=Point(0,0)
+                pt2=Point(0,0)
+                temp=strPtSet[i].split(',')
+                pt.setX(float(temp[0]))
+                pt.setY(float(temp[1]))
+                temp=strPtSet[i+1].split(',')
+                pt2.setX(float(temp[0]))
+                pt2.setY(float(temp[1]))
+                segment.append([pt,pt2])
+            deepcopy=copy.deepcopy(segment)
+            if strName in LineSeg:
+                print("Error: this street has already been added!")
+            else:
+                LineSeg[strName]=deepcopy
+            continue
+        if (re.match( r'^ *c "([^"]+)" ( *\( *[-+]?\d+ *, *[-+]?\d+ *\)){2,} *$', line)):
+
+            strName=re.search('\"([^"]+)', line).group(1)
+            strName=strName.lower()
+            if LineSeg.has_key(strName):
                 segment[:] = []
                 strPtSet=re.findall('\(([^)]+)', line)
                 #['2,-1', '2,2', '5,5', '5,6', '3,8']
@@ -179,45 +201,21 @@ def main():
                     segment.append([pt,pt2])
                 deepcopy=copy.deepcopy(segment)
                 LineSeg[strName]=deepcopy
+            else:
+                print("Error:c specified for a street that does not exist.")
+            continue
+        if (re.match( r'^ *r "([^"]+)" *$', line)):
+            strName=re.search('\"([^"]+)', line).group(1)
+            strName=strName.lower()
+            if LineSeg.has_key(strName):
+                LineSeg.pop(strName)
+            else:
+                print("Error:r specified for a street that does not exist.")
+            continue
+        if (re.match( r'^ *g *$', line)):
+            if LineSeg:
+                generate(LineSeg)
                 continue
-        if line[0]=='c':
-            if (re.match( r'^c "([^"]+)" ( *\( *[-+]?\d+ *, *[-+]?\d+ *\)){2,} *$', line)):
-
-                strName=re.search('\"([^"]+)', line).group(1)
-                strName=strName.lower()
-                if LineSeg.has_key(strName):
-                    segment[:] = []
-                    strPtSet=re.findall('\(([^)]+)', line)
-                    #['2,-1', '2,2', '5,5', '5,6', '3,8']
-                    for i in range(len(strPtSet)-1):
-                        pt=Point(0,0)
-                        pt2=Point(0,0)
-                        temp=strPtSet[i].split(',')
-                        pt.setX(float(temp[0]))
-                        pt.setY(float(temp[1]))
-                        temp=strPtSet[i+1].split(',')
-                        pt2.setX(float(temp[0]))
-                        pt2.setY(float(temp[1]))
-                        segment.append([pt,pt2])
-                    deepcopy=copy.deepcopy(segment)
-                    LineSeg[strName]=deepcopy
-                else:
-                    print("Error:c specified for a street that does not exist.")
-                continue
-        if line[0]=='r':
-            if (re.match( r'^r "([^"]+)" *$', line)):
-                strName=re.search('\"([^"]+)', line).group(1)
-                strName=strName.lower()
-                if LineSeg.has_key(strName):
-                    LineSeg.pop(strName)
-                else:
-                    print("Error:r specified for a street that does not exist.")
-                continue
-        if line[0]=='g':
-            if (re.match( r'^g *$', line)):
-                if LineSeg:
-                    generate(LineSeg)
-                    continue
         print("Error:invalid input!please input again!")
     # return exit code 0 on successful termination
     sys.exit(0)
